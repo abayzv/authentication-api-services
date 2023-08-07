@@ -1,6 +1,6 @@
 import express from "express";
 import { checkSchema, validationResult, matchedData } from "express-validator";
-import { isAuthenticated, isPermited, activityLogger } from "../../middlewares";
+import { isAuthenticated, isPermited } from "../../middlewares";
 import bcrypt from "bcrypt";
 import {
   findUserById,
@@ -196,9 +196,7 @@ const createUserRules = {
 enum UserRoles {
   superadmin = 1,
   admin = 2,
-  teacher = 3,
-  student = 4,
-  parent = 5,
+  user = 3,
 }
 
 router.get(
@@ -227,7 +225,7 @@ router.get("/me", isAuthenticated, async (req: any, res: any, next: any) => {
     const { userId } = req.payload;
     const user = await findUserById(userId);
 
-    res.json(user);
+    res.status(200).json({ data: user });
   } catch (err) {
     next(err);
   }
@@ -306,7 +304,6 @@ router.get(
 router.post(
   "/",
   isAuthenticated,
-  activityLogger("Create User", "Successfully create a new user"),
   isPermited,
   checkSchema(createUserRules),
   async (req: any, res: any, next: any) => {
@@ -340,7 +337,6 @@ router.post(
 router.put(
   "/role/:id",
   isAuthenticated,
-  activityLogger("Change User Role", "Successfully change user role"),
   isPermited,
   checkSchema(changeUserRoleRules),
   async (req: any, res: any, next: any) => {
@@ -417,7 +413,6 @@ router.put(
 router.delete(
   "/:id",
   isAuthenticated,
-  activityLogger("Delete User", "Successfully delete a use"),
   isPermited,
   async (req: any, res: any, next: any) => {
     try {

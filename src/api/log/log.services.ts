@@ -47,6 +47,8 @@ const getAllLog = async (query: {
     select: {
       id: true,
       action: true,
+      method: true,
+      status: true,
       userId: true,
       user: {
         select: {
@@ -57,7 +59,6 @@ const getAllLog = async (query: {
           },
         },
       },
-      description: true,
       createdAt: true,
     },
   });
@@ -86,9 +87,10 @@ const getAllLog = async (query: {
     return {
       id: log.id,
       action: log.action,
+      method: log.method,
+      status: log.status,
       userId: log.userId,
       userName: log.user?.profile?.name,
-      description: log.description,
       createdAt: log.createdAt,
     };
   });
@@ -100,4 +102,23 @@ const getAllLog = async (query: {
   };
 };
 
-export { getAllLog };
+// register log
+const registerLog = async (data: {
+  action: string;
+  method: string;
+  status: number;
+  userId?: string;
+  ipAddress: string;
+}) => {
+  const log = await db.activityLog.create({
+    data: {
+      action: data.action,
+      method: data.method,
+      status: data.status,
+      userId: data.userId,
+      ipAddress: data.ipAddress,
+    },
+  });
+};
+
+export { getAllLog, registerLog };

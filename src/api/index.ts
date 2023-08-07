@@ -8,7 +8,12 @@ import users from "./users/users.routes";
 import role from "./role/role.routes";
 import permission from "./permission/permission.routes";
 
+import { logger, logError } from "../middlewares";
+
 const router = express.Router();
+
+router.use(logger);
+router.use(logError);
 
 router.use("/auth", auth);
 router.use("/users", users);

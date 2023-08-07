@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import { db } from "./utils/db";
 import { findRefreshTokenByUserId } from "./api/auth/auth.services";
+import { registerLog } from "./api/log/log.services";
 
 async function isPermited(req: any, res: any, next: any) {
   const { role } = req.payload;
@@ -56,46 +57,85 @@ function errorHandler(err: any, req: any, res: any, next: any) {
   });
 }
 
-function activityLogger(action: string, description: string, useAuth = true) {
-  return async function (req: any, res: any, next: any) {
-    const ipAddress =
-      req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+function logger(req: any, res: any, next: any) {
+  const ipAddress = req.headers["x-forwarded-for"] || req.socket.remoteAddress;
+  const route = req.originalUrl;
+  const method = req.method;
 
-    if (!useAuth && res.statusCode === 200) {
-      const user = await db.user.findFirst({
-        where: {
-          email: req.body.email,
-        },
-      });
+  // Auth Logger
+  // res.on("finish", () => {
+  //   const status = res.statusCode;
 
-      await db.activityLog.create({
-        data: {
-          action,
-          description,
-          // @ts-ignore
-          ipAddress,
-          // @ts-ignore
-          userId: user.id,
-        },
-      });
+  //   if (route.includes("login") || route.includes("register")) {
+  //     registerLog({
+  //       action: route,
+  //       method: method,
+  //       status: status,
+  //       ipAddress: ipAddress,
+  //     });
+  //   }
 
-      return next();
+  //   if (req.payload?.userId) {
+  //     registerLog({
+  //       action: route,
+  //       method: method,
+  //       status: status,
+  //       userId: req.payload.userId,
+  //       ipAddress: ipAddress,
+  //     });
+  //   } else {
+  //     registerLog({
+  //       action: route,
+  //       method: method,
+  //       status: status,
+  //       ipAddress: ipAddress,
+  //     });
+  //   }
+  // });
+
+  const [oldWrite, oldEnd] = [res.write, res.end];
+  const chunks: Buffer[] = [];
+
+  (res.write as unknown) = function (chunk: any) {
+    chunks.push(Buffer.from(chunk));
+    (oldWrite as Function).apply(res, arguments);
+  };
+
+  res.end = function (chunk: any) {
+    if (chunk) {
+      chunks.push(Buffer.from(chunk));
+    }
+    const body = Buffer.concat(chunks).toString("utf8");
+    console.log(new Date(), `  ↪ [${res.statusCode}]: ${body}`);
+    (oldEnd as Function).apply(res, arguments);
+  };
+
+  next();
+}
+
+function logError(req: any, res: any, next: any) {
+  const [oldWrite, oldEnd] = [res.write, res.end];
+  const chunks: Buffer[] = [];
+
+  (res.write as unknown) = function (chunk: any) {
+    chunks.push(Buffer.from(chunk));
+    (oldWrite as Function).apply(res, arguments);
+  };
+
+  res.end = function (chunk: any) {
+    if (chunk) {
+      chunks.push(Buffer.from(chunk));
+    }
+    const body = Buffer.concat(chunks).toString("utf8");
+
+    if (res.statusCode >= 400) {
+      console.log("Ada error");
     }
 
-    const { userId } = req.payload;
-    await db.activityLog.create({
-      data: {
-        action,
-        description,
-        // @ts-ignore
-        ipAddress,
-        // @ts-ignore
-        userId: userId,
-      },
-    });
-
-    next();
+    (oldEnd as Function).apply(res, arguments);
   };
+
+  next();
 }
 
 async function isAuthenticated(req: any, res: any, next: any) {
@@ -124,4 +164,11 @@ async function isAuthenticated(req: any, res: any, next: any) {
   return next();
 }
 
-export { notFound, errorHandler, isAuthenticated, isPermited, activityLogger };
+export {
+  notFound,
+  errorHandler,
+  isAuthenticated,
+  isPermited,
+  logger,
+  logError,
+};

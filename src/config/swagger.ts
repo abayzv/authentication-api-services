@@ -112,18 +112,6 @@ export const swaggerConfig = {
       post: {
         tags: ["Auth"],
         summary: "Logout",
-        requestBody: {
-          content: {
-            "application/json": {
-              schema: {
-                type: "object",
-                example: {
-                  refreshToken: "string",
-                },
-              },
-            },
-          },
-        },
         security: [
           {
             bearerAuth: [],
