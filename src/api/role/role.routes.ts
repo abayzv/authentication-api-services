@@ -166,7 +166,7 @@ router.delete(
 
     try {
       const roles = await deleteRole(id);
-      res.json({ message: "Role successfully deleted" });
+      res.json({ message: "Role deleted successfully" });
     } catch (error) {
       next(error);
     }

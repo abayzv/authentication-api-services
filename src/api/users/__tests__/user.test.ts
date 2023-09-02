@@ -27,7 +27,7 @@ describe("GET /api/v1/users", () => {
   it("should return 401 if user is not authenticated", async () => {
     const response = await request(app).get("/api/v1/users");
     expect(response.status).toBe(401);
-    expect(response.body.message).toBe(" Un-Authorized ");
+    expect(response.body.message).toBe("Un-Authorized");
   });
 });
 
@@ -36,7 +36,7 @@ describe("POST /api/v1/users", () => {
   it("should return 401 if user is not authenticated", async () => {
     const response = await request(app).post("/api/v1/users").send({});
     expect(response.status).toBe(401);
-    expect(response.body.message).toBe(" Un-Authorized ");
+    expect(response.body.message).toBe("Un-Authorized");
   });
   it("should return 400 if email, password, name, birthDate, gender, religion, address is missing", async () => {
     const response = await request(app)
@@ -58,7 +58,7 @@ describe("POST /api/v1/users", () => {
         address: "China",
         gender: "Laki-Laki",
         religion: "Budha",
-        roleId: 4,
+        roleId: 3,
       })
       .set("Authorization", "Bearer " + token);
     expect(response.status).toBe(200);

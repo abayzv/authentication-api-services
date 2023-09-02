@@ -36,7 +36,7 @@ describe("GET /api/v1/roles", () => {
   it("should return 401 if user is not authenticated", async () => {
     const response = await request(app).get("/api/v1/roles").send();
     expect(response.status).toBe(401);
-    expect(response.body.message).toBe(" Un-Authorized ");
+    expect(response.body.message).toBe("Un-Authorized");
   });
 });
 
@@ -45,7 +45,7 @@ describe("POST /api/v1/roles", () => {
   it("should return 401 if user is not authenticated", async () => {
     const response = await request(app).post("/api/v1/roles").send({});
     expect(response.status).toBe(401);
-    expect(response.body.message).toBe(" Un-Authorized ");
+    expect(response.body.message).toBe("Un-Authorized");
   });
   it("should return 400 if name is missing", async () => {
     const response = await request(app)
@@ -71,5 +71,40 @@ describe("POST /api/v1/roles", () => {
       .set("Authorization", `Bearer ${token}`);
     expect(response.status).toBe(400);
     expect(response.body.message).toBe("Role already exist");
+  });
+});
+
+// delete role
+describe("DELETE /api/v1/roles/:id", () => {
+  it("should return 401 if user is not authenticated", async () => {
+    const response = await request(app)
+      .delete(`/api/v1/roles/${roleId}`)
+      .send();
+    expect(response.status).toBe(401);
+    expect(response.body.message).toBe("Un-Authorized");
+  });
+  it("should return 400 if role is not found", async () => {
+    const response = await request(app)
+      .delete(`/api/v1/roles/999999`)
+      .send()
+      .set("Authorization", `Bearer ${token}`);
+    expect(response.status).toBe(400);
+    expect(response.body.message).toBe("Role not found");
+  });
+  it("should return 200 if role is deleted", async () => {
+    const response = await request(app)
+      .delete(`/api/v1/roles/${roleId}`)
+      .send()
+      .set("Authorization", `Bearer ${token}`);
+    expect(response.status).toBe(200);
+    expect(response.body.message).toBe("Role deleted successfully");
+  });
+});
+
+afterEach(async () => {
+  db.role.deleteMany({
+    where: {
+      name: randomName,
+    },
   });
 });
