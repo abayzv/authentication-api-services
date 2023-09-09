@@ -1,5 +1,6 @@
 import { db } from "../../utils/db";
 import { Prisma } from "@prisma/client";
+import { PermissionAction } from "@prisma/client";
 
 const viewAllPermissions = async (query: {
   name?: string;
@@ -111,6 +112,33 @@ const deletePermission = (id: number) => {
   });
 };
 
+const verify = async (action: PermissionAction, path: string) => {
+
+  const isPermited = await db.role.findMany({
+    where: {
+      id: 1,
+      permissions: {
+        some: {
+          permission: {
+            action,
+            menu: {
+              contains: path,
+              mode: "insensitive",
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!isPermited.length) {
+    return false;
+  } else {
+    return true;
+  }
+
+}
+
 export {
   viewAllPermissions,
   findPermissionByName,
@@ -119,4 +147,5 @@ export {
   createPermission,
   updatePermission,
   deletePermission,
+  verify
 };

@@ -8,6 +8,7 @@ import {
   findPermissionByName,
   findPermissionById,
   deletePermission,
+  verify,
 } from "./permission.services";
 
 const router = express.Router();
@@ -190,5 +191,47 @@ router.delete(
     }
   }
 );
+
+// Verify Permission
+router.post(
+  "/verify",
+  isAuthenticated,
+  async (req: any, res: any, next: any) => {
+    const { role } = req.payload;
+
+    if (role === 1) {
+      return res.json({
+        data: {
+          isPermited: 1
+        }
+      });
+    }
+
+    const { action, path } = req.body;
+
+    if (path.includes("me")) {
+      return res.json({
+        data: {
+          isPermited: 1
+        }
+      });
+    }
+
+    const isPermited = await verify(action, path);
+
+    if (!isPermited) {
+      res.json({
+        data: {
+          isPermited: 0
+        }
+      });
+    } else {
+      return res.json({
+        data: {
+          isPermited: 1
+        }
+      });
+    }
+  });
 
 export default router;
